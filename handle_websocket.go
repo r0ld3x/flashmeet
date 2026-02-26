@@ -16,7 +16,16 @@ import (
 var clients = make(map[string]*Client)
 var clientsMu sync.RWMutex
 
+const maxConns = 50000
+
 func handleWebSocket(w http.ResponseWriter, r *http.Request) {
+	clientsMu.RLock()
+	count := len(clients)
+	clientsMu.RUnlock()
+	if count >= maxConns {
+		http.Error(w, "Server at capacity", http.StatusServiceUnavailable)
+		return
+	}
 	if !middleware.EnsureUpgradeChecks(w, r) {
 		return
 	}
