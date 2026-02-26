@@ -86,11 +86,15 @@ func handleClientDisconnect(c *Client) {
 	} else {
 		return
 	}
+	pipe := redis.Client.Pipeline()
+	pipe.Del(redis.Ctx, "user_match:"+c.ID)
+	pipe.Del(redis.Ctx, "user_match:"+partnerID)
+	pipe.Del(redis.Ctx, matchKey)
+	_, err = pipe.Exec(redis.Ctx)
+	if err != nil {
+		log.Println("failed to delete match:", err)
 
-	redis.Client.Del(redis.Ctx, "user_match:"+c.ID)
-	redis.Client.Del(redis.Ctx, "user_match:"+partnerID)
-	redis.Client.Del(redis.Ctx, matchKey)
-
+	}
 	partnerAlive := redis.Client.Exists(redis.Ctx, "client:"+partnerID).Val() == 1
 
 	if partnerAlive {
