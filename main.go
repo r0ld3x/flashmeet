@@ -66,6 +66,7 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		return c.File("index.html")
 	})
+	e.File("/logo.png", "logo.png")
 	redis.Client.XGroupCreateMkStream(
 		redis.Ctx,
 		"matchmaking_stream",

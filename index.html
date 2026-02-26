@@ -3,7 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Omiro - Random Video Chat</title>
+    <title>FlashMeet - Random Video Chat</title>
+    <meta name="description" content="Meet strangers instantly with random video chat. No sign-up, no downloads — just click Start and talk." />
+    <meta name="keywords" content="video chat, random chat, omegle alternative, stranger chat, webcam chat, flashmeet, live video" />
+    <meta name="author" content="FlashMeet" />
+    <meta name="theme-color" content="#111111" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://flashmeet.tech/" />
+    <meta property="og:title" content="FlashMeet - Random Video Chat" />
+    <meta property="og:description" content="Meet strangers instantly with random video chat. No sign-up, no downloads — just click Start and talk." />
+    <meta property="og:image" content="https://flashmeet.tech/logo.png" />
+    <meta property="og:site_name" content="FlashMeet" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="FlashMeet - Random Video Chat" />
+    <meta name="twitter:description" content="Meet strangers instantly with random video chat. No sign-up, no downloads — just click Start and talk." />
+    <meta name="twitter:image" content="https://flashmeet.tech/logo.png" />
+
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>⚡</text></svg>" />
     <style>
       * {
         margin: 0;
@@ -11,200 +29,110 @@
         box-sizing: border-box;
       }
 
-      @keyframes gradient {
-        0% {
-          background-position: 0% 50%;
-        }
-        50% {
-          background-position: 100% 50%;
-        }
-        100% {
-          background-position: 0% 50%;
-        }
-      }
-
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          transform: scale(1);
-        }
-        50% {
-          transform: scale(1.05);
-        }
-      }
-
-      @keyframes shimmer {
-        0% {
-          background-position: -1000px 0;
-        }
-        100% {
-          background-position: 1000px 0;
-        }
-      }
-
       body {
-        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-          Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        background: linear-gradient(-45deg, #0f0f23, #1a1a2e, #16213e, #0f3460);
-        background-size: 400% 400%;
-        animation: gradient 15s ease infinite;
-        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: #1a1a1a;
+        color: #e0e0e0;
+        height: 100vh;
         display: flex;
-        justify-content: center;
+        flex-direction: column;
+      }
+
+      .topbar {
+        background: #111;
+        padding: 10px 20px;
+        display: flex;
         align-items: center;
-        padding: 15px;
+        justify-content: space-between;
+        border-bottom: 1px solid #333;
+        flex-shrink: 0;
       }
 
-      .container {
-        background: rgba(26, 26, 46, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
-        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5),
-          0 0 0 1px rgba(255, 255, 255, 0.05);
-        max-width: 1400px;
-        width: 100%;
-        overflow: hidden;
-        animation: fadeIn 0.5s ease;
-      }
-
-      .header {
-        background: linear-gradient(
-          135deg,
-          #667eea 0%,
-          #764ba2 50%,
-          #f093fb 100%
-        );
-        background-size: 200% 200%;
-        animation: gradient 3s ease infinite;
-        color: white;
-        padding: 30px 20px;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .header::before {
-        content: "";
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(
-          circle,
-          rgba(255, 255, 255, 0.1) 0%,
-          transparent 70%
-        );
-        animation: pulse 3s ease-in-out infinite;
-      }
-
-      .header h1 {
-        font-size: clamp(2em, 5vw, 3em);
-        margin-bottom: 8px;
-        font-weight: 800;
-        position: relative;
-        z-index: 1;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-      }
-
-      .header p {
-        font-size: clamp(0.9em, 2vw, 1.1em);
-        opacity: 0.9;
-        position: relative;
-        z-index: 1;
-      }
-
-      .status {
-        padding: 16px;
-        text-align: center;
-        font-weight: 600;
-        font-size: clamp(0.95em, 2vw, 1.05em);
-        background: rgba(40, 40, 60, 0.8);
-        color: #a0a0c0;
-        transition: all 0.3s ease;
-        letter-spacing: 0.5px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      }
-
-      .status.connected {
-        background: linear-gradient(
-          90deg,
-          rgba(52, 211, 153, 0.2),
-          rgba(16, 185, 129, 0.2)
-        );
-        color: #34d399;
-        animation: shimmer 3s linear infinite;
-      }
-
-      .status.matching {
-        background: linear-gradient(
-          90deg,
-          rgba(251, 191, 36, 0.2),
-          rgba(245, 158, 11, 0.2)
-        );
-        color: #fbbf24;
-        animation: pulse 1.5s ease-in-out infinite;
-      }
-
-      .status.matched {
-        background: linear-gradient(
-          90deg,
-          rgba(96, 165, 250, 0.2),
-          rgba(59, 130, 246, 0.2)
-        );
-        color: #60a5fa;
-        animation: shimmer 2s linear infinite;
-      }
-
-      .main-content {
+      .topbar .logo {
         display: flex;
-        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
       }
 
-      .video-section {
-        flex: 2;
-        min-width: 300px;
-        padding: clamp(20px, 4vw, 40px);
-        background: linear-gradient(180deg, #16213e 0%, #0f0f23 100%);
-        position: relative;
+      .topbar .logo .wordmark {
+        font-size: 1.4em;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+      }
+
+      .topbar .logo .word-flash {
+        color: #fff;
+      }
+
+      .topbar .logo .word-meet {
+        color: #888;
+      }
+
+      .topbar .logo .bolt {
+        color: #2196f3;
+        font-size: 0.9em;
+        margin-left: -2px;
+      }
+
+      .topbar .tagline {
+        font-size: 0.75em;
+        color: #555;
+        display: none;
+      }
+
+      @media (min-width: 600px) {
+        .topbar .tagline {
+          display: inline;
+        }
+      }
+
+      .topbar .status-text {
+        font-size: 0.85em;
+        color: #888;
+      }
+
+      .topbar .status-text.active {
+        color: #4caf50;
+      }
+
+      .topbar .status-text.searching {
+        color: #ff9800;
+      }
+
+      .main {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .video-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #000;
+        min-width: 0;
       }
 
       .videos {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: clamp(16px, 3vw, 24px);
-        margin-bottom: clamp(20px, 4vw, 30px);
+        flex: 1;
+        display: flex;
+        min-height: 0;
       }
 
-      .video-container {
+      .vid-box {
+        flex: 1;
         position: relative;
         background: #0a0a0a;
-        border-radius: 12px;
         overflow: hidden;
-        aspect-ratio: 4/3;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-        transition: all 0.3s ease;
-        border: 2px solid rgba(102, 126, 234, 0.2);
       }
 
-      .video-container:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
-        border-color: rgba(102, 126, 234, 0.6);
+      .vid-box + .vid-box {
+        border-left: 1px solid #333;
       }
 
-      video {
+      .vid-box video {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -215,455 +143,237 @@
         transform: scaleX(-1);
       }
 
-      .video-label {
+      .vid-label {
         position: absolute;
-        top: 12px;
-        left: 12px;
-        background: linear-gradient(
-          135deg,
-          rgba(102, 126, 234, 0.95),
-          rgba(118, 75, 162, 0.95)
-        );
-        color: white;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: clamp(0.85em, 2vw, 0.95em);
-        font-weight: 600;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(10px);
-        letter-spacing: 0.5px;
+        bottom: 8px;
+        left: 8px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #ccc;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 0.8em;
       }
 
-      .controls {
+      .btn-bar {
         display: flex;
-        gap: clamp(8px, 2vw, 12px);
         justify-content: center;
-        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px;
+        background: #111;
+        border-top: 1px solid #333;
+        flex-shrink: 0;
       }
 
-      button {
-        padding: clamp(10px, 2vw, 14px) clamp(20px, 4vw, 32px);
+      .btn-bar button {
+        padding: 10px 28px;
         border: none;
-        border-radius: 25px;
-        font-size: clamp(0.9em, 2vw, 1.05em);
-        font-weight: 700;
+        border-radius: 4px;
+        font-size: 0.95em;
+        font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        position: relative;
-        overflow: hidden;
-        letter-spacing: 0.5px;
+        transition: opacity 0.15s;
       }
 
-      button::before {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.3);
-        transform: translate(-50%, -50%);
-        transition: width 0.6s, height 0.6s;
-      }
-
-      button:active::before {
-        width: 300px;
-        height: 300px;
-      }
-
-      button:hover:not(:disabled) {
-        transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-      }
-
-      button:active:not(:disabled) {
-        transform: translateY(0) scale(0.98);
-      }
-
-      button:disabled {
-        opacity: 0.4;
+      .btn-bar button:disabled {
+        opacity: 0.3;
         cursor: not-allowed;
-        transform: none;
-        filter: grayscale(70%);
       }
 
-      .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+      .btn-bar button:hover:not(:disabled) {
+        opacity: 0.85;
       }
 
-      .btn-primary:hover:not(:disabled) {
-        background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+      .btn-start {
+        background: #4caf50;
+        color: #fff;
       }
 
-      .btn-danger {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        color: white;
+      .btn-next {
+        background: #2196f3;
+        color: #fff;
       }
 
-      .btn-danger:hover:not(:disabled) {
-        background: linear-gradient(135deg, #d775e0 0%, #e03e55 100%);
+      .btn-stop {
+        background: #f44336;
+        color: #fff;
       }
 
-      .btn-success {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        color: white;
-      }
-
-      .btn-success:hover:not(:disabled) {
-        background: linear-gradient(135deg, #3891e3 0%, #00d7e3 100%);
-      }
-
-      .chat-section {
-        flex: 1;
-        min-width: 300px;
+      .chat-panel {
+        width: 320px;
         display: flex;
         flex-direction: column;
-        background: rgba(22, 22, 38, 0.9);
-      }
-
-      .chat-header {
-        padding: clamp(18px, 3vw, 24px);
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        font-weight: 700;
-        font-size: clamp(1.1em, 2.5vw, 1.3em);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        letter-spacing: 0.5px;
+        background: #111;
+        border-left: 1px solid #333;
+        flex-shrink: 0;
       }
 
       .chat-messages {
         flex: 1;
-        padding: clamp(16px, 3vw, 24px);
         overflow-y: auto;
-        max-height: 550px;
-        min-height: 250px;
-        scroll-behavior: smooth;
-        background: rgba(15, 15, 35, 0.5);
+        padding: 12px;
+        min-height: 0;
       }
 
       .chat-messages::-webkit-scrollbar {
-        width: 8px;
-      }
-
-      .chat-messages::-webkit-scrollbar-track {
-        background: rgba(30, 30, 50, 0.5);
-        border-radius: 10px;
+        width: 6px;
       }
 
       .chat-messages::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-        border-radius: 10px;
+        background: #444;
+        border-radius: 3px;
       }
 
-      .chat-messages::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #5568d3 0%, #653a8b 100%);
-      }
-
-      .message {
-        margin-bottom: 14px;
-        padding: 12px 16px;
-        border-radius: 16px;
-        max-width: 85%;
+      .msg {
+        margin-bottom: 8px;
+        padding: 7px 10px;
+        border-radius: 6px;
+        max-width: 90%;
         word-wrap: break-word;
-        animation: fadeIn 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        transition: transform 0.2s ease;
+        font-size: 0.9em;
+        line-height: 1.4;
       }
 
-      .message:hover {
-        transform: translateX(2px);
-      }
-
-      .message.sent {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+      .msg.sent {
+        background: #2a5298;
+        color: #fff;
         margin-left: auto;
-        text-align: right;
-        border-bottom-right-radius: 4px;
       }
 
-      .message.received {
-        background: rgba(40, 40, 60, 0.8);
-        color: #e0e0e0;
-        border-bottom-left-radius: 4px;
-        border: 1px solid rgba(102, 126, 234, 0.2);
+      .msg.received {
+        background: #2a2a2a;
+        color: #ddd;
       }
 
-      .message-time {
-        font-size: 0.75em;
-        opacity: 0.7;
-        margin-top: 6px;
-        font-weight: 500;
+      .msg.system {
+        background: none;
+        color: #666;
+        text-align: center;
+        font-size: 0.8em;
+        max-width: 100%;
       }
 
       .chat-input {
         display: flex;
-        padding: clamp(16px, 3vw, 24px);
-        gap: clamp(8px, 2vw, 12px);
-        border-top: 2px solid rgba(102, 126, 234, 0.2);
-        background: rgba(22, 22, 38, 0.95);
-        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+        padding: 10px;
+        gap: 8px;
+        border-top: 1px solid #333;
       }
 
       .chat-input input {
         flex: 1;
-        padding: clamp(12px, 2vw, 14px) clamp(16px, 3vw, 20px);
-        border: 2px solid rgba(102, 126, 234, 0.3);
-        border-radius: 25px;
-        font-size: clamp(0.9em, 2vw, 1em);
-        outline: none;
-        transition: all 0.3s ease;
-        background: rgba(30, 30, 50, 0.8);
+        padding: 8px 12px;
+        border: 1px solid #333;
+        border-radius: 4px;
+        background: #1a1a1a;
         color: #e0e0e0;
-      }
-
-      .chat-input input::placeholder {
-        color: rgba(224, 224, 224, 0.5);
+        font-size: 0.9em;
+        outline: none;
       }
 
       .chat-input input:focus {
-        border-color: #667eea;
-        background: rgba(40, 40, 60, 0.9);
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+        border-color: #555;
       }
 
       .chat-input button {
-        padding: clamp(12px, 2vw, 14px) clamp(20px, 4vw, 28px);
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        background: #2196f3;
+        color: #fff;
+        font-size: 0.9em;
+        cursor: pointer;
       }
 
-      .info {
-        padding: clamp(18px, 3vw, 24px);
-        background: rgba(15, 15, 35, 0.9);
-        font-size: clamp(0.85em, 2vw, 0.95em);
-        border-top: 2px solid rgba(102, 126, 234, 0.2);
-      }
-
-      .info-item {
-        margin-bottom: 12px;
-        padding: 12px;
-        background: rgba(30, 30, 50, 0.6);
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        transition: all 0.3s ease;
-        border: 1px solid rgba(102, 126, 234, 0.2);
-      }
-
-      .info-item:hover {
-        transform: translateX(5px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
-        border-color: rgba(102, 126, 234, 0.4);
-      }
-
-      .info-item strong {
-        display: inline-block;
-        width: clamp(100px, 20vw, 120px);
-        color: #60a5fa;
-        font-weight: 700;
-      }
-
-      .info-item span {
-        color: #a0a0c0;
-      }
-
-      @media (max-width: 1024px) {
-        .videos {
-          grid-template-columns: 1fr;
-        }
-
-        .video-section {
-          min-width: 100%;
-        }
-
-        .main-content {
-          flex-direction: column;
-        }
+      .chat-input button:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
       }
 
       @media (max-width: 768px) {
-        body {
-          padding: 10px;
-        }
-
-        .header {
-          padding: 25px 15px;
-        }
-
-        .video-section {
-          padding: 20px 15px;
-        }
-
-        .controls {
-          gap: 8px;
-        }
-
-        .controls button {
-          font-size: 0.9em;
-        }
-
-        .chat-section {
-          min-width: 100%;
-        }
-
-        .chat-messages {
-          min-height: 200px;
-          max-height: 400px;
-        }
-      }
-
-      @media (max-width: 480px) {
-        .header h1 {
-          font-size: 1.8em;
-        }
-
-        .controls {
+        .main {
           flex-direction: column;
+        }
+
+        .videos {
+          flex-direction: column;
+        }
+
+        .vid-box + .vid-box {
+          border-left: none;
+          border-top: 1px solid #333;
+        }
+
+        .chat-panel {
           width: 100%;
+          border-left: none;
+          border-top: 1px solid #333;
+          max-height: 40vh;
         }
-
-        .controls button {
-          width: 100%;
-          padding: 12px 20px;
-        }
-
-        .video-label {
-          font-size: 0.8em;
-          padding: 5px 12px;
-        }
-      }
-
-      /* Loading animation */
-      @keyframes rotate {
-        from {
-          transform: rotate(0deg);
-        }
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      .loading {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        border-top-color: white;
-        animation: rotate 1s linear infinite;
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="header">
-        <h1>🎥 Omiro</h1>
-        <p>Random Video Chat with Strangers</p>
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <a class="logo" href="/">
+          <span class="wordmark"><span class="word-flash">flash</span><span class="word-meet">meet</span></span>
+          <span class="bolt">&#9889;</span>
+        </a>
+        <span class="tagline">Talk to strangers</span>
       </div>
+      <span class="status-text" id="statusText">Click Start to begin</span>
+    </div>
 
-      <div class="status" id="status">Disconnected</div>
-
-      <div class="main-content">
-        <div class="video-section">
-          <div class="videos">
-            <div class="video-container">
-              <video id="localVideo" autoplay muted playsinline></video>
-              <div class="video-label">You</div>
-            </div>
-            <div class="video-container">
-              <video id="remoteVideo" autoplay playsinline></video>
-              <div class="video-label">Stranger</div>
-            </div>
+    <div class="main">
+      <div class="video-area">
+        <div class="videos">
+          <div class="vid-box">
+            <video id="localVideo" autoplay muted playsinline></video>
+            <div class="vid-label">You</div>
           </div>
-
-          <div class="controls">
-            <button class="btn-primary" id="connectBtn" onclick="connect()">
-              Connect
-            </button>
-            <button
-              class="btn-success"
-              id="startBtn"
-              onclick="startVideo()"
-              disabled
-            >
-              Start Video
-            </button>
-            <button
-              class="btn-primary"
-              id="findBtn"
-              onclick="findMatch()"
-              disabled
-            >
-              Find Match
-            </button>
-            <button
-              class="btn-danger"
-              id="nextBtn"
-              onclick="nextPerson()"
-              disabled
-            >
-              Next Person
-            </button>
-            <button
-              class="btn-danger"
-              id="disconnectBtn"
-              onclick="disconnect()"
-              disabled
-            >
-              Disconnect
-            </button>
+          <div class="vid-box">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <div class="vid-label">Stranger</div>
           </div>
         </div>
 
-        <div class="chat-section">
-          <div class="chat-header">Chat</div>
-          <div class="chat-messages" id="chatMessages">
-            <div style="text-align: center; color: #999; padding: 20px">
-              No messages yet. Find a match to start chatting!
-            </div>
-          </div>
-          <div class="chat-input">
-            <input
-              type="text"
-              id="messageInput"
-              placeholder="Type a message..."
-              disabled
-              onkeypress="handleKeyPress(event)"
-            />
-            <button
-              class="btn-primary"
-              id="sendBtn"
-              onclick="sendMessage()"
-              disabled
-            >
-              Send
-            </button>
-          </div>
+        <div class="btn-bar">
+          <button class="btn-start" id="startBtn" onclick="start()">
+            Start
+          </button>
+          <button class="btn-next" id="nextBtn" onclick="next()" disabled>
+            Next
+          </button>
+          <button class="btn-stop" id="stopBtn" onclick="stop()" disabled>
+            Stop
+          </button>
         </div>
       </div>
 
-      <div class="info">
-        <div class="info-item">
-          <strong>Client ID:</strong> <span id="clientId">-</span>
+      <div class="chat-panel">
+        <div class="chat-messages" id="chatMessages">
+          <div class="msg system">Find someone to start chatting</div>
         </div>
-        <div class="info-item">
-          <strong>Partner ID:</strong> <span id="partnerId">-</span>
-        </div>
-        <div class="info-item">
-          <strong>Status:</strong>
-          <span id="connectionStatus">Not connected</span>
+        <div class="chat-input">
+          <input
+            type="text"
+            id="msgInput"
+            placeholder="Type a message..."
+            disabled
+            onkeydown="if(event.key==='Enter')sendChat()"
+          />
+          <button id="sendBtn" onclick="sendChat()" disabled>Send</button>
         </div>
       </div>
     </div>
 
     <script>
+      const url = new URL(window.location.href);
       let ws = null;
       let localStream = null;
       let peerConnection = null;
-      let clientId = null;
-      let partnerId = null;
-      let isInitiator = false; // Track if this client should initiate the offer
+      let isCaller = false;
+      let sessionToken = null;
 
       const config = {
         iceServers: [
@@ -688,177 +398,111 @@
         iceCandidatePoolSize: 10,
       };
 
-      function updateStatus(message, className = "") {
-        const statusEl = document.getElementById("status");
-        statusEl.textContent = message;
-        statusEl.className = "status " + className;
+      function setStatus(text, cls) {
+        const el = document.getElementById("statusText");
+        el.textContent = text;
+        el.className = "status-text" + (cls ? " " + cls : "");
       }
 
-      function updateInfo(field, value) {
-        document.getElementById(field).textContent = value || "-";
-      }
+      async function start() {
+        document.getElementById("startBtn").disabled = true;
 
-      async function getSessionToken() {
         try {
-          const response = await fetch("/session/new");
-          if (!response.ok) {
-            throw new Error("Failed to get session token");
-          }
-          const data = await response.json();
-          return data.token;
-        } catch (error) {
-          console.error("Error fetching session token:", error);
-          throw error;
-        }
-      }
-
-      async function connect() {
-        try {
-          // Get session token first
-          updateStatus("Getting session token...", "");
-          const token = await getSessionToken();
-          console.log("Session token received:", token);
-
-          const wsUrl = `/ws?token=${encodeURIComponent(token)}`;
-
-          ws = new WebSocket(wsUrl);
-
-          ws.onopen = () => {
-            console.log("WebSocket connected");
-            updateStatus("Connected to server", "connected");
-            updateInfo("connectionStatus", "Connected");
-
-            document.getElementById("connectBtn").disabled = true;
-            document.getElementById("startBtn").disabled = false;
-            document.getElementById("disconnectBtn").disabled = false;
-          };
-
-          ws.onmessage = (event) => {
-            console.log("Received:", event.data);
-            const msg = JSON.parse(event.data);
-            handleMessage(msg);
-          };
-
-          ws.onclose = () => {
-            console.log("WebSocket disconnected");
-            updateStatus("Disconnected", "");
-            updateInfo("connectionStatus", "Disconnected");
-            resetUI();
-          };
-
-          ws.onerror = (error) => {
-            console.error("WebSocket error:", error);
-            updateStatus("Connection error", "");
-          };
-        } catch (error) {
-          console.error("Failed to connect:", error);
-          updateStatus("Failed to get session token", "");
-          alert("Failed to connect. Please try again.");
-        }
-      }
-
-      async function startVideo() {
-        try {
+          setStatus("Starting camera...");
           localStream = await navigator.mediaDevices.getUserMedia({
             video: true,
             audio: true,
           });
           document.getElementById("localVideo").srcObject = localStream;
-
-          updateStatus("Video started - Ready to find a match", "connected");
-          document.getElementById("startBtn").disabled = true;
-          document.getElementById("findBtn").disabled = false;
-        } catch (error) {
-          console.error("Error accessing media devices:", error);
-          alert(
-            "Could not access camera/microphone. Please check permissions."
-          );
-        }
-      }
-
-      function findMatch() {
-        if (!ws || ws.readyState !== WebSocket.OPEN) {
-          alert("Not connected to server");
+        } catch (e) {
+          console.error("Camera error:", e);
+          setStatus("Camera access denied");
+          document.getElementById("startBtn").disabled = false;
           return;
         }
 
-        send({ op: "join_queue" });
-        updateStatus("Finding a match...", "matching");
-        document.getElementById("findBtn").disabled = true;
+        try {
+          setStatus("Connecting...");
+          const api = await fetch(`${url.origin}/session/new`);
+          const response = await api.json();
+          sessionToken = response.token;
+
+          ws = new WebSocket(`ws://${url.host}/ws?token=${sessionToken}`);
+
+          ws.onopen = () => {
+            setStatus("Looking for someone...", "searching");
+            document.getElementById("stopBtn").disabled = false;
+            ws.send(JSON.stringify({ op: "join_queue" }));
+          };
+
+          ws.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            handleMessage(msg);
+          };
+
+          ws.onclose = () => {
+            setStatus("Disconnected");
+            resetUI(false);
+          };
+
+          ws.onerror = () => {
+            setStatus("Connection error");
+          };
+        } catch (e) {
+          console.error("Connect error:", e);
+          setStatus("Failed to connect");
+          document.getElementById("startBtn").disabled = false;
+        }
       }
 
-      function nextPerson() {
-        console.log("Looking for next person...");
-
+      function next() {
         if (peerConnection) {
           peerConnection.close();
           peerConnection = null;
         }
+        document.getElementById("remoteVideo").srcObject = null;
+        isCaller = false;
 
-        const remoteVideo = document.getElementById("remoteVideo");
-        remoteVideo.srcObject = null;
+        sendMessage({ op: "next" });
 
-        // Send "next" command (NOT disconnect - we stay connected)
-        send({ op: "next" });
-
-        // Clear partner info
-        partnerId = null;
-        isInitiator = false;
-        updateInfo("partnerId", "-");
-
-        // Clear chat
-        clearChat();
-
-        // Update status
-        updateStatus("Looking for next person...", "matching");
-
-        // Disable controls temporarily
         document.getElementById("nextBtn").disabled = true;
-        document.getElementById("messageInput").disabled = true;
+        document.getElementById("msgInput").disabled = true;
         document.getElementById("sendBtn").disabled = true;
-
-        // Automatically find next match
-        setTimeout(() => {
-          findMatch();
-        }, 500);
+        clearChat();
+        addSystemMsg("Looking for someone new...");
+        setStatus("Looking for someone...", "searching");
       }
 
-      function disconnect() {
+      function stop() {
         if (localStream) {
-          localStream.getTracks().forEach((track) => track.stop());
+          localStream.getTracks().forEach((t) => t.stop());
           localStream = null;
         }
-
         if (peerConnection) {
           peerConnection.close();
           peerConnection = null;
         }
-
         if (ws) {
           ws.close();
           ws = null;
         }
-
-        resetUI();
+        resetUI(true);
       }
 
-      function resetUI() {
-        document.getElementById("connectBtn").disabled = false;
-        document.getElementById("startBtn").disabled = true;
-        document.getElementById("findBtn").disabled = true;
+      function resetUI(full) {
+        document.getElementById("startBtn").disabled = false;
         document.getElementById("nextBtn").disabled = true;
-        document.getElementById("disconnectBtn").disabled = true;
-        document.getElementById("messageInput").disabled = true;
+        document.getElementById("stopBtn").disabled = true;
+        document.getElementById("msgInput").disabled = true;
         document.getElementById("sendBtn").disabled = true;
+        isCaller = false;
 
-        document.getElementById("localVideo").srcObject = null;
-        document.getElementById("remoteVideo").srcObject = null;
-
-        clientId = null;
-        partnerId = null;
-        updateInfo("clientId", "-");
-        updateInfo("partnerId", "-");
-        clearChat();
+        if (full) {
+          document.getElementById("localVideo").srcObject = null;
+          document.getElementById("remoteVideo").srcObject = null;
+          setStatus("Click Start to begin");
+          clearChat();
+        }
       }
 
       function handleMessage(msg) {
@@ -867,68 +511,44 @@
             handleMatchFound(msg);
             break;
           case "webrtc_offer":
-            handleWebRTCOffer(msg);
+            handleOffer(msg);
             break;
           case "webrtc_answer":
-            handleWebRTCAnswer(msg);
+            handleAnswer(msg);
             break;
           case "ice_candidate":
-            handleICECandidate(msg);
+            handleIceCandidate(msg);
             break;
           case "chat":
-            handleChatMessage(msg);
+            addMsg(msg.message, "received");
             break;
           case "partner_disconnected":
-            handlePartnerDisconnect();
+            handlePartnerDisconnected();
             break;
-          default:
-            if (msg.client_id) {
-              clientId = msg.client_id;
-              updateInfo("clientId", clientId);
-            }
-            if (msg.message) {
-              console.log("Server message:", msg.message);
-            }
         }
       }
 
       async function handleMatchFound(msg) {
-        console.log("Match found:", msg.partner);
-        partnerId = msg.partner;
-        updateInfo("partnerId", partnerId);
-        updateStatus("Match found! Connecting...", "matched");
+        isCaller = msg.role === "caller";
+        setStatus("Connected to stranger", "active");
+        clearChat();
+        addSystemMsg("You're now chatting with a stranger.");
 
         document.getElementById("nextBtn").disabled = false;
-        document.getElementById("messageInput").disabled = false;
+        document.getElementById("msgInput").disabled = false;
         document.getElementById("sendBtn").disabled = false;
 
-        // Determine who initiates based on who should call
-        // The server tells us if we should be the caller
-        isInitiator =
-          msg.should_call === true || clientId.localeCompare(partnerId) < 0;
+        await createPeerConnection();
 
-        console.log(`Client ID: ${clientId}`);
-        console.log(`Partner ID: ${partnerId}`);
-        console.log(`Comparison result: ${clientId.localeCompare(partnerId)}`);
-        console.log(`Is initiator: ${isInitiator}`);
-
-        if (isInitiator) {
-          // CALLER: Create peer connection and offer immediately
+        if (isCaller) {
           console.log("=== I am the CALLER ===");
-          await createPeerConnection();
-
           const offer = await peerConnection.createOffer();
           await peerConnection.setLocalDescription(offer);
-          console.log("Created offer, state:", peerConnection.signalingState);
-
-          send({
+          sendMessage({
             op: "webrtc_offer",
-            data: {
-              sdp: offer.sdp,
-            },
+            data: { sdp: offer.sdp },
           });
         } else {
-          // CALLEE: Do NOT create peer connection yet - wait for offer
           console.log("=== I am the CALLEE - waiting for offer ===");
         }
       }
@@ -936,125 +556,88 @@
       async function createPeerConnection() {
         peerConnection = new RTCPeerConnection(config);
 
-        // Add local stream tracks
         if (localStream) {
           localStream.getTracks().forEach((track) => {
             peerConnection.addTrack(track, localStream);
           });
         }
 
-        // Handle incoming tracks
-        peerConnection.ontrack = (event) => {
-          console.log("Received remote track");
-          const remoteVideo = document.getElementById("remoteVideo");
-          if (remoteVideo.srcObject !== event.streams[0]) {
-            remoteVideo.srcObject = event.streams[0];
-            updateStatus("Connected! You can now video chat", "matched");
-          }
-        };
-
-        // Handle ICE candidates
         peerConnection.onicecandidate = (event) => {
           if (event.candidate) {
-            send({
+            sendMessage({
               op: "ice_candidate",
-              data: {
-                candidate: {
-                  candidate: event.candidate.candidate,
-                  sdpMLineIndex: event.candidate.sdpMLineIndex,
-                  sdpMid: event.candidate.sdpMid,
-                },
-              },
+              data: { candidate: event.candidate },
             });
           }
         };
 
-        // Handle connection state
-        peerConnection.onconnectionstatechange = () => {
-          console.log("Connection state:", peerConnection.connectionState);
+        peerConnection.ontrack = (event) => {
+          const remoteVideo = document.getElementById("remoteVideo");
+          if (remoteVideo.srcObject !== event.streams[0]) {
+            remoteVideo.srcObject = event.streams[0];
+          }
+        };
+
+        peerConnection.oniceconnectionstatechange = () => {
+          console.log(
+            "ICE Connection State:",
+            peerConnection.iceConnectionState
+          );
         };
       }
 
-      async function handleWebRTCOffer(msg) {
-        console.log("=== Received WebRTC offer ===", msg);
+      async function handleOffer(msg) {
+        console.log("=== Received WebRTC offer ===");
 
-        // Only the CALLEE should receive offers
-        if (isInitiator) {
-          console.error("❌ I am the CALLER - should not receive offer!");
+        if (isCaller) {
+          console.error("I am the CALLER - should not receive offer!");
           return;
         }
-
-        // CALLEE: Create peer connection NOW (when receiving offer)
         if (!peerConnection) {
-          console.log("Creating peer connection as CALLEE");
           await createPeerConnection();
         }
 
-        console.log(
-          "Setting remote offer, current state:",
-          peerConnection.signalingState
-        );
         await peerConnection.setRemoteDescription(
-          new RTCSessionDescription({
-            type: "offer",
-            sdp: msg.data.sdp,
-          })
+          new RTCSessionDescription({ type: "offer", sdp: msg.data })
         );
-        console.log("Remote offer set, state:", peerConnection.signalingState);
 
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
-        console.log(
-          "Local answer created, state:",
-          peerConnection.signalingState
-        );
 
-        send({
+        sendMessage({
           op: "webrtc_answer",
-          data: {
-            sdp: answer.sdp,
-          },
+          data: { sdp: answer.sdp },
         });
-        console.log("✅ Answer sent to CALLER");
+        console.log("Answer sent to CALLER");
       }
 
-      async function handleWebRTCAnswer(msg) {
-        console.log("=== Received WebRTC answer ===", msg);
+      async function handleAnswer(msg) {
+        console.log("=== Received WebRTC answer ===");
 
-        // Only the CALLER should receive answers
-        if (!isInitiator) {
-          console.error("❌ I am the CALLEE - should not receive answer!");
+        if (!isCaller) {
+          console.error("I am the CALLEE - should not receive answer!");
           return;
         }
-
         if (!peerConnection) {
-          console.error("❌ No peer connection exists!");
+          console.error("No peer connection exists!");
           return;
         }
 
-        // CRITICAL: Answer is only valid if we created an offer
-        const state = peerConnection.signalingState;
-        console.log("Current signaling state:", state);
-
-        if (state !== "have-local-offer") {
-          console.error(`❌ Cannot set remote answer in state: ${state}`);
+        if (peerConnection.signalingState !== "have-local-offer") {
+          console.error(
+            "Cannot set remote answer in state:",
+            peerConnection.signalingState
+          );
           return;
         }
 
         await peerConnection.setRemoteDescription(
-          new RTCSessionDescription({
-            type: "answer",
-            sdp: msg.data.sdp,
-          })
+          new RTCSessionDescription({ type: "answer", sdp: msg.data.sdp })
         );
-        console.log(
-          "✅ Remote answer set, state:",
-          peerConnection.signalingState
-        );
+        console.log("Remote answer set successfully");
       }
 
-      async function handleICECandidate(msg) {
-        console.log("Received ICE candidate", msg);
+      async function handleIceCandidate(msg) {
         if (peerConnection && msg.data.candidate) {
           const candidate = msg.data.candidate;
           await peerConnection.addIceCandidate(
@@ -1067,105 +650,67 @@
         }
       }
 
-      function handleChatMessage(msg) {
-        addMessage(msg.message, "received");
-      }
-
-      function handlePartnerDisconnect() {
+      function handlePartnerDisconnected() {
         console.log("Partner disconnected");
-        updateStatus("Partner disconnected - Finding new match...", "matching");
 
-        // Clean up peer connection
         if (peerConnection) {
           peerConnection.close();
           peerConnection = null;
         }
 
-        // Clear remote video
         document.getElementById("remoteVideo").srcObject = null;
+        isCaller = false;
 
-        // Clear partner info
-        partnerId = null;
-        isInitiator = false;
-        updateInfo("partnerId", "-");
-
-        // Clear chat
-        clearChat();
-
-        // Disable chat controls
-        document.getElementById("messageInput").disabled = true;
+        document.getElementById("msgInput").disabled = true;
         document.getElementById("sendBtn").disabled = true;
         document.getElementById("nextBtn").disabled = true;
 
-        // Automatically rejoin the queue
+        addSystemMsg("Stranger has disconnected.");
+        setStatus("Looking for someone...", "searching");
+
         setTimeout(() => {
           if (ws && ws.readyState === WebSocket.OPEN && localStream) {
-            console.log("Automatically rejoining queue...");
-            findMatch();
+            ws.send(JSON.stringify({ op: "join_queue" }));
           }
         }, 1000);
       }
 
-      function sendMessage() {
-        const input = document.getElementById("messageInput");
-        const message = input.value.trim();
+      function sendMessage(message) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify(message));
+        }
+      }
 
-        if (!message) return;
+      function sendChat() {
+        const input = document.getElementById("msgInput");
+        const text = input.value.trim();
+        if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
 
-        send({
-          op: "chat",
-          data: {
-            message: message,
-          },
-        });
-
-        addMessage(message, "sent");
+        sendMessage({ op: "chat", data: { message: text } });
+        addMsg(text, "sent");
         input.value = "";
       }
 
-      function handleKeyPress(event) {
-        if (event.key === "Enter") {
-          sendMessage();
-        }
+      function addMsg(text, type) {
+        const box = document.getElementById("chatMessages");
+        const d = document.createElement("div");
+        d.className = "msg " + type;
+        d.textContent = text;
+        box.appendChild(d);
+        box.scrollTop = box.scrollHeight;
       }
 
-      function addMessage(text, type) {
-        const messagesDiv = document.getElementById("chatMessages");
-
-        if (messagesDiv.querySelector('[style*="text-align: center"]')) {
-          messagesDiv.innerHTML = "";
-        }
-
-        const messageDiv = document.createElement("div");
-        messageDiv.className = "message " + type;
-
-        const textDiv = document.createElement("div");
-        textDiv.textContent = text;
-
-        const timeDiv = document.createElement("div");
-        timeDiv.className = "message-time";
-        timeDiv.textContent = new Date().toLocaleTimeString();
-
-        messageDiv.appendChild(textDiv);
-        messageDiv.appendChild(timeDiv);
-        messagesDiv.appendChild(messageDiv);
-
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      function addSystemMsg(text) {
+        const box = document.getElementById("chatMessages");
+        const d = document.createElement("div");
+        d.className = "msg system";
+        d.textContent = text;
+        box.appendChild(d);
+        box.scrollTop = box.scrollHeight;
       }
 
       function clearChat() {
-        const messagesDiv = document.getElementById("chatMessages");
-        messagesDiv.innerHTML =
-          '<div style="text-align: center; color: #999; padding: 20px;">No messages yet. Find a match to start chatting!</div>';
-      }
-
-      function send(data) {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify(data));
-          console.log("Sent:", data);
-        } else {
-          console.error("WebSocket not connected");
-        }
+        document.getElementById("chatMessages").innerHTML = "";
       }
     </script>
   </body>
