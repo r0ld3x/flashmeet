@@ -72,6 +72,7 @@ func main() {
 		"matchmakers",
 		"$",
 	)
+	redis.LoadMatchScript()
 	go redis.StartMatchmaker(serverID)
 	e.Start(":8080")
 }

@@ -19,7 +19,6 @@ var clientKey = "client:%s" // client:{clientID} -> {serverID}
 func RegisterClient(clientID, ip, serverID string) error {
 	key := fmt.Sprintf(clientKey, clientID)
 	return Client.Set(Ctx, key, serverID, 60*time.Second).Err()
-
 }
 
 func GetClient(clientID string) (string, error) {
@@ -28,8 +27,12 @@ func GetClient(clientID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
 	return serverId, nil
+}
+
+func RefreshClient(clientID, serverID string) {
+	key := fmt.Sprintf(clientKey, clientID)
+	Client.Set(Ctx, key, serverID, 60*time.Second)
 }
 
 /********************************
@@ -81,7 +84,6 @@ func SendToClient(clientID string, payload any) error {
  * SIGNAL SUBSCRIBER (WS SERVER)
  ********************************/
 
-// This must be called inside EACH WS server, passing its serverID AND a handler
 func StartSignalSubscriber(serverID string, handler func(userID string, payload json.RawMessage)) {
 	ch := Client.Subscribe(Ctx, "signal:"+serverID).Channel()
 
@@ -116,17 +118,30 @@ type queuedUser struct {
 	msgID  string
 }
 
-type PairResult int
+var matchScript = redis.NewScript(`
+local u1_lock = redis.call('SET', KEYS[1], ARGV[1], 'NX', 'EX', 300)
+if not u1_lock then return 0 end
+local u2_lock = redis.call('SET', KEYS[2], ARGV[1], 'NX', 'EX', 300)
+if not u2_lock then
+    redis.call('DEL', KEYS[1])
+    return 0
+end
+redis.call('HSET', KEYS[3],
+    'u1', ARGV[2], 'u2', ARGV[3],
+    'u1_connected', 1, 'u2_connected', 1,
+    'created_at', ARGV[4])
+redis.call('EXPIRE', KEYS[3], 300)
+return 1
+`)
 
-const (
-	PairCreated PairResult = iota
-	RequeueU1
-	RequeueU2
-	DropBoth
-)
+func LoadMatchScript() {
+	if err := matchScript.Load(Ctx, Client).Err(); err != nil {
+		log.Fatal("failed to load match script:", err)
+	}
+	log.Println("Match Lua script loaded")
+}
 
 func StartMatchmaker(serverId string) {
-
 	buffer := []queuedUser{}
 	autoClaimStart := "0-0"
 
@@ -134,9 +149,7 @@ func StartMatchmaker(serverId string) {
 	defer ticker.Stop()
 
 	for {
-
 		select {
-
 		case <-ticker.C:
 			messages, next, err := Client.XAutoClaim(Ctx, &redis.XAutoClaimArgs{
 				Stream:   streamName,
@@ -151,20 +164,18 @@ func StartMatchmaker(serverId string) {
 				autoClaimStart = next
 				for _, msg := range messages {
 					func(m redis.XMessage) {
-						fmt.Printf("Matchmaker auto-claimed message: %v\n", msg)
 						defer func() {
 							if r := recover(); r != nil {
-								log.Printf("PANIC while processing message %s: %v", msg.ID, r)
-								Client.XAck(Ctx, streamName, groupName, msg.ID)
-								if err != nil {
+								log.Printf("PANIC while processing message %s: %v", m.ID, r)
+								if err := Client.XAck(Ctx, streamName, groupName, m.ID).Err(); err != nil {
 									log.Printf("Failed to ACK after panic: %v", err)
 								}
 							}
 						}()
 
 						buffer = append(buffer, queuedUser{
-							userID: msg.Values["client_id"].(string),
-							msgID:  msg.ID,
+							userID: m.Values["client_id"].(string),
+							msgID:  m.ID,
 						})
 					}(msg)
 				}
@@ -175,14 +186,13 @@ func StartMatchmaker(serverId string) {
 				Group:    groupName,
 				Consumer: serverId,
 				Streams:  []string{streamName, ">"},
-				Count:    1,
-				Block:    time.Duration(15) * time.Second,
+				Count:    100,
+				Block:    500 * time.Millisecond,
 			}).Result()
 
 			if err == nil {
 				for _, stream := range res {
 					for _, msg := range stream.Messages {
-						fmt.Printf("Matchmaker received message: %v\n", msg)
 						buffer = append(buffer, queuedUser{
 							userID: msg.Values["client_id"].(string),
 							msgID:  msg.ID,
@@ -191,122 +201,142 @@ func StartMatchmaker(serverId string) {
 				}
 			}
 		}
-		log.Printf("buffer: %+v\n ", buffer)
-		for len(buffer) >= 2 {
 
-			u1 := buffer[0]
-			u2 := buffer[1]
-			buffer = buffer[2:]
-
-			result := createPair(u1, u2)
-
-			switch result {
-
-			case PairCreated:
-				Client.XAck(Ctx, streamName, groupName, u1.msgID)
-				Client.XAck(Ctx, streamName, groupName, u2.msgID)
-
-			case RequeueU1:
-				requeue(u1.userID)
-				Client.XAck(Ctx, streamName, groupName, u1.msgID)
-				Client.XAck(Ctx, streamName, groupName, u2.msgID)
-
-			case RequeueU2:
-				requeue(u2.userID)
-				Client.XAck(Ctx, streamName, groupName, u1.msgID)
-				Client.XAck(Ctx, streamName, groupName, u2.msgID)
-
-			case DropBoth:
-				Client.XAck(Ctx, streamName, groupName, u1.msgID)
-				Client.XAck(Ctx, streamName, groupName, u2.msgID)
-			}
-		}
+		buffer = processBuffer(buffer)
 	}
 }
 
-// TODO: client has only 60 seconds update it
-func createPair(u1, u2 queuedUser) PairResult {
+func processBuffer(buffer []queuedUser) []queuedUser {
+	if len(buffer) < 2 {
+		return buffer
+	}
 
-	// Check presence
-	_, err1 := GetClient(u1.userID)
-	_, err2 := GetClient(u2.userID)
+	// Phase 1: bulk presence check — 1 round-trip
+	pipe := Client.Pipeline()
+	clientCmds := make([]*redis.StringCmd, len(buffer))
+	matchCmds := make([]*redis.StringCmd, len(buffer))
 
-	alive1 := err1 == nil
-	alive2 := err2 == nil
+	for i, u := range buffer {
+		clientCmds[i] = pipe.Get(Ctx, fmt.Sprintf(clientKey, u.userID))
+		matchCmds[i] = pipe.Get(Ctx, "user_match:"+u.userID)
+	}
+	pipe.Exec(Ctx)
 
-	// Prevent double matching
-	if alive1 {
-		if _, err := Client.Get(Ctx, "user_match:"+u1.userID).Result(); err == nil {
-			alive1 = false
+	// Build userID -> serverID map for notifications later
+	servers := make(map[string]string, len(buffer))
+	for i, u := range buffer {
+		if srv, err := clientCmds[i].Result(); err == nil {
+			servers[u.userID] = srv
 		}
 	}
 
-	if alive2 {
-		if _, err := Client.Get(Ctx, "user_match:"+u2.userID).Result(); err == nil {
-			alive2 = false
+	// Phase 2: filter valid users, bulk-ACK dead/already-matched — 1 round-trip
+	var valid []queuedUser
+	ackPipe := Client.Pipeline()
+
+	for i, u := range buffer {
+		_, clientErr := clientCmds[i].Result()
+		_, matchErr := matchCmds[i].Result()
+
+		isAlive := clientErr == nil
+		isMatched := matchErr == nil
+
+		if !isAlive || isMatched {
+			ackPipe.XAck(Ctx, streamName, groupName, u.msgID)
+		} else {
+			valid = append(valid, u)
 		}
 	}
+	ackPipe.Exec(Ctx)
 
-	switch {
+	if len(valid) < 2 {
+		return valid
+	}
 
-	case alive1 && alive2:
-		log.Printf("Creating pair: %s & %s\n", u1.userID, u2.userID)
+	// Phase 3: pair survivors with pipelined Lua scripts — 1 round-trip
+	type pendingMatch struct {
+		u1, u2  queuedUser
+		matchID string
+		result  *redis.Cmd
+	}
+
+	matchPipe := Client.Pipeline()
+	var pending []pendingMatch
+
+	for len(valid) >= 2 {
+		u1 := valid[0]
+		u2 := valid[1]
+		valid = valid[2:]
+
 		matchID := uuid.NewString()
-
-		err := Client.HSet(Ctx, "match:"+matchID,
-			"u1", u1.userID,
-			"u2", u2.userID,
-			"u1_connected", 1,
-			"u2_connected", 1,
-			"created_at", time.Now().Unix(),
-		).Err()
-
-		if err != nil {
-			log.Printf("Failed to create match: %v", err)
-			return DropBoth
-		}
-
-		Client.Expire(Ctx, "match:"+matchID, 5*time.Minute)
-
-		lock1, _ := Client.SetNX(Ctx, "user_match:"+u1.userID, matchID, 5*time.Minute).Result()
-		if !lock1 {
-			return RequeueU2
-		}
-
-		lock2, _ := Client.SetNX(Ctx, "user_match:"+u2.userID, matchID, 5*time.Minute).Result()
-		if !lock2 {
-			Client.Del(Ctx, "user_match:"+u1.userID)
-			return RequeueU1
-		}
-
-		SendToClient(u1.userID, map[string]any{
-			"op":       "match_found",
-			"match_id": matchID,
-			"role":     "caller",
-		})
-
-		SendToClient(u2.userID, map[string]any{
-			"op":       "match_found",
-			"match_id": matchID,
-			"role":     "callee",
-		})
-
-		return PairCreated
-
-	case alive1 && !alive2:
-		return RequeueU1
-
-	case !alive1 && alive2:
-		return RequeueU2
-
-	default:
-		return DropBoth
+		res := matchPipe.EvalSha(Ctx, matchScript.Hash(),
+			[]string{
+				"user_match:" + u1.userID,
+				"user_match:" + u2.userID,
+				"match:" + matchID,
+			},
+			matchID, u1.userID, u2.userID, time.Now().Unix(),
+		)
+		pending = append(pending, pendingMatch{u1, u2, matchID, res})
 	}
+	matchPipe.Exec(Ctx)
+
+	// Phase 4: handle results, bulk-ACK paired, bulk-notify — 2 round-trips
+	var leftover []queuedUser
+	notifyPipe := Client.Pipeline()
+	ackPipe2 := Client.Pipeline()
+
+	for _, p := range pending {
+		ackPipe2.XAck(Ctx, streamName, groupName, p.u1.msgID)
+		ackPipe2.XAck(Ctx, streamName, groupName, p.u2.msgID)
+
+		result, err := p.result.Int()
+		if err != nil || result == 0 {
+			leftover = append(leftover, p.u1, p.u2)
+			continue
+		}
+
+		log.Printf("Matched: %s & %s (match:%s)\n", p.u1.userID, p.u2.userID, p.matchID)
+
+		u1Msg, _ := json.Marshal(map[string]any{
+			"client_id": p.u1.userID,
+			"payload": map[string]any{
+				"op": "match_found", "match_id": p.matchID, "role": "caller",
+			},
+		})
+		u2Msg, _ := json.Marshal(map[string]any{
+			"client_id": p.u2.userID,
+			"payload": map[string]any{
+				"op": "match_found", "match_id": p.matchID, "role": "callee",
+			},
+		})
+
+		u1Server := servers[p.u1.userID]
+		u2Server := servers[p.u2.userID]
+
+		if u1Server != "" {
+			notifyPipe.Publish(Ctx, "signal:"+u1Server, u1Msg)
+		}
+		if u2Server != "" {
+			notifyPipe.Publish(Ctx, "signal:"+u2Server, u2Msg)
+		}
+	}
+
+	ackPipe2.Exec(Ctx)
+	notifyPipe.Exec(Ctx)
+
+	// Single leftover user stays in buffer for next iteration
+	if len(valid) == 1 {
+		leftover = append(leftover, valid[0])
+	}
+
+	return leftover
 }
 
-func requeue(userID string) {
+func Requeue(userID string) {
 	Client.XAdd(Ctx, &redis.XAddArgs{
-		Stream: "matchmaking_stream",
+		Stream: streamName,
+		MaxLen: 10000,
 		Values: map[string]interface{}{
 			"client_id": userID,
 		},
@@ -332,17 +362,13 @@ func CheckRateLimit(ip string, limit int, window time.Duration) (bool, error) {
 	return count <= int64(limit), nil
 }
 
-func RefreshClient(clientID, serverID string) {
-	key := fmt.Sprintf(clientKey, clientID)
-	Client.Set(Ctx, key, serverID, 60*time.Second)
-}
-
-func Requeue(userID string) {
-	Client.XAdd(Ctx, &redis.XAddArgs{
-		Stream: streamName,
-		MaxLen: 10000,
-		Values: map[string]interface{}{
-			"client_id": userID,
-		},
-	})
+func RefreshMatch(userID string) {
+	matchID, err := Client.Get(Ctx, "user_match:"+userID).Result()
+	if err != nil {
+		return
+	}
+	pipe := Client.Pipeline()
+	pipe.Expire(Ctx, "user_match:"+userID, 5*time.Minute)
+	pipe.Expire(Ctx, "match:"+matchID, 5*time.Minute)
+	pipe.Exec(Ctx)
 }

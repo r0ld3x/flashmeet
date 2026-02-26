@@ -79,6 +79,7 @@ func (c *Client) keepAlive(serverID string) {
 			return
 		case <-ticker.C:
 			redis.RefreshClient(c.ID, serverID)
+			redis.RefreshMatch(c.ID)
 		}
 	}
 }
