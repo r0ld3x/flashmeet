@@ -1,4 +1,4 @@
-module omiro
+module flashmeet
 
 go 1.23.0
 

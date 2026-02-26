@@ -2,9 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"flashmeet/middleware"
+	"flashmeet/redis"
 	"net/http"
-	"omiro/middleware"
-	"omiro/redis"
 	"os"
 	"time"
 
@@ -25,6 +25,9 @@ var upgrader = websocket.Upgrader{
 	HandshakeTimeout:  10 * time.Second,
 	Subprotocols:      []string{"chat"},
 	EnableCompression: true,
+	Error: func(w http.ResponseWriter, r *http.Request, status int, reason error) {
+		http.Error(w, reason.Error(), status)
+	},
 }
 
 func main() {
@@ -63,7 +66,13 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		return c.File("index.html")
 	})
-	go redis.StartMatchmaker()
+	redis.Client.XGroupCreateMkStream(
+		redis.Ctx,
+		"matchmaking_stream",
+		"matchmakers",
+		"$",
+	)
+	go redis.StartMatchmaker(serverID)
 	e.Start(":8080")
 }
 

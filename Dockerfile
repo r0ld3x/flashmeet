@@ -17,7 +17,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
     -ldflags="-s -w" \
     -a -installsuffix cgo \
-    -o omiro .
+    -o flashmeet .
 
 # ===================================
 # Stage 2: Runtime (Distroless)
@@ -29,7 +29,7 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # Copy binary and static files
-COPY --from=builder /build/omiro /app/omiro
+COPY --from=builder /build/flashmeet /app/flashmeet
 COPY --from=builder /build/index.html /app/index.html
 
 WORKDIR /app
@@ -40,4 +40,4 @@ USER nonroot:nonroot
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["/app/omiro"]
+ENTRYPOINT ["/app/flashmeet"]

@@ -3,14 +3,14 @@ version: "3.8"
 services:
   redis:
     image: redis:7-alpine
-    container_name: omiro-redis
+    container_name: flashmeet-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
     networks:
-      - omiro-network
+      - flashmeet-network
     command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -23,7 +23,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: omiro-app
+    container_name: flashmeet-app
     restart: unless-stopped
     ports:
       - "8080:8080"
@@ -35,14 +35,14 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - omiro-network
+      - flashmeet-network
     # Uncomment to use pre-built image from GHCR instead of building locally
-    # image: ghcr.io/r0ld3x/omiro:latest
+    # image: ghcr.io/r0ld3x/flashmeet:latest
 
 volumes:
   redis-data:
     driver: local
 
 networks:
-  omiro-network:
+  flashmeet-network:
     driver: bridge

@@ -1,9 +1,9 @@
 .PHONY: help build run stop clean push pull test logs
 
 # Variables
-IMAGE_NAME = ghcr.io/r0ld3x/omiro
+IMAGE_NAME = ghcr.io/r0ld3x/flashmeet
 VERSION ?= latest
-LOCAL_IMAGE = omiro:local
+LOCAL_IMAGE = flashmeet:local
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -22,9 +22,9 @@ build-prod: ## Build production image with optimizations
 	@echo "✅ Image built: $(IMAGE_NAME):$(VERSION)"
 
 run: ## Run with docker-compose
-	@echo "Starting Omiro with docker-compose..."
+	@echo "Starting flashmeet with docker-compose..."
 	docker-compose up -d
-	@echo "✅ Omiro is running at http://localhost:8080"
+	@echo "✅ flashmeet is running at http://localhost:8080"
 
 stop: ## Stop docker-compose services
 	@echo "Stopping services..."
@@ -77,7 +77,7 @@ rebuild: ## Rebuild and restart
 
 size: ## Show image size
 	@echo "Image sizes:"
-	@docker images | grep -E "omiro|IMAGE"
+	@docker images | grep -E "flashmeet|IMAGE"
 
 prune: ## Remove unused Docker resources
 	@echo "Pruning Docker resources..."

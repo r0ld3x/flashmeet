@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"flashmeet/middleware"
+	"flashmeet/redis"
 	"log"
 	"net/http"
-	"omiro/middleware"
-	"omiro/redis"
 	"sync"
 	"time"
 
@@ -21,15 +21,15 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println("upgrade error:", err)
+		return
+	}
 	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 	conn.SetPongHandler(func(string) error {
 		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 		return nil
 	})
-	if err != nil {
-		log.Println("upgrade error:", err)
-		return
-	}
 	defer conn.Close()
 	log.Println("client connected:", conn.RemoteAddr())
 
@@ -37,6 +37,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		ID:   uuid.NewString(),
 		Conn: conn,
 		Send: make(chan SendMessageType, 256),
+		done: make(chan struct{}),
 	}
 
 	clientsMu.Lock()
@@ -44,17 +45,25 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	clientsMu.Unlock()
 
 	ip := r.RemoteAddr
-	if err := redis.RegisterClient(client.ID, ip, serverID); err != nil {
+	err = redis.RegisterClient(client.ID, ip, serverID)
+	defer func() {
+		clientsMu.Lock()
+		delete(clients, client.ID)
+		clientsMu.Unlock()
+		redis.Client.Del(redis.Ctx, "client:"+client.ID)
+	}()
+
+	if err != nil {
 		log.Println("failed to register client in redis:", err)
 		return
 	}
 
 	go client.writePump()
 	go client.readPump()
+	go client.keepAlive(serverID)
 
 	welcomeMsg := map[string]any{
 		"message":   "Hello from server",
-		"client_id": client.ID,
 		"timestamp": time.Now().Unix(),
 	}
 
@@ -69,5 +78,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		Type:    websocket.TextMessage,
 	}
 
-	select {}
+	<-client.done
+	redis.Client.Del(redis.Ctx, "client:"+client.ID)
+	log.Println("handleWebSocket exiting for:", client.ID)
 }

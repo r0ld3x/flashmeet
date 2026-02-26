@@ -2,15 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"flashmeet/redis"
 	"log"
-
-	"github.com/gorilla/websocket"
 )
 
 func handleWebRTCOffer(c *Client, data json.RawMessage) {
-	if c.Partner == nil {
-		return
-	}
 
 	var payload struct {
 		SDP string `json:"sdp"`
@@ -20,28 +17,23 @@ func handleWebRTCOffer(c *Client, data json.RawMessage) {
 		log.Println("invalid offer:", err)
 		return
 	}
-
-	partner := safeGetClient(c.Partner.ID)
-	if partner == nil {
+	target, err := getMatchTarget(c)
+	if err != nil {
+		log.Println("failed to get match target:", err)
 		return
 	}
+	// 4️⃣ Forward to partner
+	err = redis.SendToClient(target, map[string]any{
+		"op":   "webrtc_offer",
+		"data": payload.SDP,
+	})
 
-	outgoing := map[string]any{
-		"op": "webrtc_offer",
-		"data": map[string]any{
-			"from": c.ID,
-			"sdp":  payload.SDP,
-		},
+	if err != nil {
+		log.Println("failed to forward offer:", err)
 	}
-
-	bytes, _ := json.Marshal(outgoing)
-	partner.Send <- SendMessageType{Type: websocket.TextMessage, Message: bytes}
 }
 
 func handleWebRTCAnswer(c *Client, data json.RawMessage) {
-	if c.Partner == nil {
-		return
-	}
 
 	var payload struct {
 		SDP string `json:"sdp"`
@@ -52,8 +44,9 @@ func handleWebRTCAnswer(c *Client, data json.RawMessage) {
 		return
 	}
 
-	partner := safeGetClient(c.Partner.ID)
-	if partner == nil {
+	target, err := getMatchTarget(c)
+	if err != nil {
+		log.Println("failed to get match target:", err)
 		return
 	}
 
@@ -65,14 +58,13 @@ func handleWebRTCAnswer(c *Client, data json.RawMessage) {
 		},
 	}
 
-	bytes, _ := json.Marshal(outgoing)
-	partner.Send <- SendMessageType{Type: websocket.TextMessage, Message: bytes}
+	err = redis.SendToClient(target, outgoing)
+	if err != nil {
+		log.Println("failed to forward answer:", err)
+	}
 }
 
 func handleICECandidate(c *Client, data json.RawMessage) {
-	if c.Partner == nil {
-		return
-	}
 
 	var payload struct {
 		Candidate map[string]any `json:"candidate"`
@@ -83,8 +75,9 @@ func handleICECandidate(c *Client, data json.RawMessage) {
 		return
 	}
 
-	partner := safeGetClient(c.Partner.ID)
-	if partner == nil {
+	target, err := getMatchTarget(c)
+	if err != nil {
+		log.Println("failed to get match target:", err)
 		return
 	}
 
@@ -96,13 +89,55 @@ func handleICECandidate(c *Client, data json.RawMessage) {
 		},
 	}
 
-	bytes, _ := json.Marshal(outgoing)
-	partner.Send <- SendMessageType{Type: websocket.TextMessage, Message: bytes}
+	err = redis.SendToClient(target, outgoing)
+	if err != nil {
+		log.Println("failed to forward ice candidate:", err)
+	}
 }
 
-func safeGetClient(id string) *Client {
-	clientsMu.RLock()
-	c := clients[id]
-	clientsMu.RUnlock()
-	return c
+func getMatchTarget(c *Client) (string, error) {
+	matchID, err := redis.Client.Get(redis.Ctx, "user_match:"+c.ID).Result()
+	if err != nil {
+		return "", err
+	}
+
+	match, err := redis.Client.HGetAll(redis.Ctx, "match:"+matchID).Result()
+	if err != nil || len(match) == 0 {
+		return "", err
+	}
+
+	if match["u1"] == c.ID {
+		return match["u2"], nil
+	} else if match["u2"] == c.ID {
+		return match["u1"], nil
+	}
+
+	return "", errors.New("client not part of match")
+}
+
+func delPartnerRelationship(c *Client) {
+	matchID, err := redis.Client.Get(redis.Ctx, "user_match:"+c.ID).Result()
+	if err != nil {
+		return
+	}
+
+	matchKey := "match:" + matchID
+
+	match, err := redis.Client.HGetAll(redis.Ctx, matchKey).Result()
+	if err != nil || len(match) == 0 {
+		return
+	}
+
+	var partnerID string
+	if match["u1"] == c.ID {
+		partnerID = match["u2"]
+	} else if match["u2"] == c.ID {
+		partnerID = match["u1"]
+	} else {
+		return
+	}
+
+	redis.Client.Del(redis.Ctx, "user_match:"+c.ID)
+	redis.Client.Del(redis.Ctx, "user_match:"+partnerID)
+	redis.Client.Del(redis.Ctx, matchKey)
 }

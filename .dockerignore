@@ -20,7 +20,7 @@ LICENSE
 *~
 
 # Build artifacts
-omiro
+flashmeet
 *.exe
 *.test
 *.out

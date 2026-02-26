@@ -17,7 +17,8 @@ var tokenSecret = []byte("replace-with-env-secret")
 
 func GenerateSessionToken() (string, int64, error) {
 	sid := uuid.NewString()
-	exp := time.Now().Add(10 * time.Minute).Unix()
+	//todo: add 10 minute timestamp and sign with HMAC
+	exp := time.Now().Add(100 * time.Minute).Unix()
 	msg := fmt.Sprintf("%s:%d", sid, exp)
 	mac := hmac.New(sha256.New, tokenSecret)
 	mac.Write([]byte(msg))
