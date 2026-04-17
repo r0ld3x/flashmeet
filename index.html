@@ -1,27 +1,43 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FlashMeet - Random Video Chat</title>
-    <meta name="description" content="Meet strangers instantly with random video chat. No sign-up, no downloads — just click Start and talk." />
-    <meta name="keywords" content="video chat, random chat, omegle alternative, stranger chat, webcam chat, flashmeet, live video" />
+    <meta
+      name="description"
+      content="Meet strangers instantly with random video chat. No sign-up, no downloads — just click Start and talk."
+    />
+    <meta
+      name="keywords"
+      content="video chat, random chat, omegle alternative, stranger chat, webcam chat, flashmeet, live video"
+    />
     <meta name="author" content="FlashMeet" />
     <meta name="theme-color" content="#111111" />
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://flashmeet.tech/" />
     <meta property="og:title" content="FlashMeet - Random Video Chat" />
-    <meta property="og:description" content="Meet strangers instantly with random video chat. No sign-up, no downloads — just click Start and talk." />
+    <meta
+      property="og:description"
+      content="Meet strangers instantly with random video chat. No sign-up, no downloads — just click Start and talk."
+    />
     <meta property="og:image" content="https://flashmeet.tech/logo.png" />
     <meta property="og:site_name" content="FlashMeet" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="FlashMeet - Random Video Chat" />
-    <meta name="twitter:description" content="Meet strangers instantly with random video chat. No sign-up, no downloads — just click Start and talk." />
+    <meta
+      name="twitter:description"
+      content="Meet strangers instantly with random video chat. No sign-up, no downloads — just click Start and talk."
+    />
     <meta name="twitter:image" content="https://flashmeet.tech/logo.png" />
 
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>⚡</text></svg>" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>⚡</text></svg>"
+    />
     <style>
       * {
         margin: 0;
@@ -30,8 +46,8 @@
       }
 
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         background: #1a1a1a;
         color: #e0e0e0;
         height: 100vh;
@@ -314,9 +330,12 @@
   </head>
   <body>
     <div class="topbar">
-      <div style="display:flex;align-items:center;gap:14px;">
+      <div style="display: flex; align-items: center; gap: 14px">
         <a class="logo" href="/">
-          <span class="wordmark"><span class="word-flash">flash</span><span class="word-meet">meet</span></span>
+          <span class="wordmark"
+            ><span class="word-flash">flash</span
+            ><span class="word-meet">meet</span></span
+          >
           <span class="bolt">&#9889;</span>
         </a>
         <span class="tagline">Talk to strangers</span>
@@ -360,7 +379,7 @@
             id="msgInput"
             placeholder="Type a message..."
             disabled
-            onkeydown="if(event.key==='Enter')sendChat()"
+            onkeydown="if (event.key === 'Enter') sendChat();"
           />
           <button id="sendBtn" onclick="sendChat()" disabled>Send</button>
         </div>
@@ -427,7 +446,10 @@
           const response = await api.json();
           sessionToken = response.token;
 
-          ws = new WebSocket(`ws://${url.host}/ws?token=${sessionToken}`);
+          const protocol = url.protocol === "https:" ? "wss:" : "ws:";
+          ws = new WebSocket(
+            `${protocol}//${url.host}/ws?token=${sessionToken}`,
+          );
 
           ws.onopen = () => {
             setStatus("Looking for someone...", "searching");
@@ -581,7 +603,7 @@
         peerConnection.oniceconnectionstatechange = () => {
           console.log(
             "ICE Connection State:",
-            peerConnection.iceConnectionState
+            peerConnection.iceConnectionState,
           );
         };
       }
@@ -598,7 +620,7 @@
         }
 
         await peerConnection.setRemoteDescription(
-          new RTCSessionDescription({ type: "offer", sdp: msg.data })
+          new RTCSessionDescription({ type: "offer", sdp: msg.data }),
         );
 
         const answer = await peerConnection.createAnswer();
@@ -626,13 +648,13 @@
         if (peerConnection.signalingState !== "have-local-offer") {
           console.error(
             "Cannot set remote answer in state:",
-            peerConnection.signalingState
+            peerConnection.signalingState,
           );
           return;
         }
 
         await peerConnection.setRemoteDescription(
-          new RTCSessionDescription({ type: "answer", sdp: msg.data.sdp })
+          new RTCSessionDescription({ type: "answer", sdp: msg.data.sdp }),
         );
         console.log("Remote answer set successfully");
       }
@@ -645,7 +667,7 @@
               candidate: candidate.candidate,
               sdpMLineIndex: candidate.sdpMLineIndex,
               sdpMid: candidate.sdpMid,
-            })
+            }),
           );
         }
       }
